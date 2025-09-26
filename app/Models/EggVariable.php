@@ -26,10 +26,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property bool $required
  * @property Egg $egg
  * @property ServerVariable $serverVariable
- *
- * The "server_value" variable is only present on the object if you've loaded this model
- * using the server relationship.
- * @property string|null $server_value
  */
 class EggVariable extends Model implements Validatable
 {
@@ -113,5 +109,20 @@ class EggVariable extends Model implements Validatable
     public function serverVariable(): HasMany
     {
         return $this->hasMany(ServerVariable::class, 'variable_id');
+    }
+
+    /**
+     * Get the server-specific variable value for a given server.
+     * Returns the value from ServerVariable if it exists, otherwise returns the default_value.
+     */
+    public function getServerValue(?int $serverId = null): string
+    {
+        if ($serverId === null) {
+            return $this->default_value;
+        }
+
+        $serverVariable = $this->serverVariable()->where('server_id', $serverId)->first();
+        
+        return $serverVariable?->variable_value ?? $this->default_value;
     }
 }

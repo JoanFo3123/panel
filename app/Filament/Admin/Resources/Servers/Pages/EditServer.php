@@ -642,7 +642,7 @@ class EditServer extends EditRecord
                                                 'server_id' => $server->id,
                                                 'variable_id' => $variable->id,
                                             ], [
-                                                'variable_value' => $variable->server_value ?? '',
+                                                'variable_value' => $variable->serverVariable->first()?->variable_value ?? $variable->default_value,
                                             ]);
                                         }
 

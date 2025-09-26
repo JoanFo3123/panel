@@ -20,7 +20,8 @@ class StartupCommandService
 
         foreach ($server->variables as $variable) {
             $find[] = '{{' . $variable->env_variable . '}}';
-            $replace[] = ($variable->user_viewable && !$hideAllValues) ? ($variable->server_value ?? $variable->default_value) : '[hidden]';
+            $serverValue = $variable->serverVariable->first()?->variable_value ?? $variable->default_value;
+            $replace[] = ($variable->user_viewable && !$hideAllValues) ? $serverValue : '[hidden]';
         }
 
         return str_replace($find, $replace, $server->startup);
