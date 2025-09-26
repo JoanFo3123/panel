@@ -26,10 +26,6 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property bool $required
  * @property Egg $egg
  * @property ServerVariable $serverVariable
- *
- * Dynamic property that returns the server-specific variable value when the
- * serverVariable relationship is loaded, otherwise returns the default_value.
- * @property-read string $server_value
  */
 class EggVariable extends Model implements Validatable
 {
@@ -100,24 +96,6 @@ class EggVariable extends Model implements Validatable
     public function getRequiredAttribute(): bool
     {
         return in_array('required', $this->rules);
-    }
-
-    /**
-     * Backwards-compatible accessor for server_value.
-     * This mimics the old behavior where server_value was available
-     * when the model was loaded through the server relationship.
-     */
-    public function getServerValueAttribute(): ?string
-    {
-        // If serverVariable relationship is loaded and contains data for this server,
-        // return the first one (there should only be one per server anyway)
-        if ($this->relationLoaded('serverVariable')) {
-            $serverVariable = $this->serverVariable->first();
-            return $serverVariable?->variable_value ?? $this->default_value;
-        }
-        
-        // Fallback to default_value if no server-specific value
-        return $this->default_value;
     }
 
     public function egg(): HasOne

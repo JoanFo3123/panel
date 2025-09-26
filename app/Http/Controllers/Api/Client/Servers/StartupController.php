@@ -70,7 +70,7 @@ class StartupController extends ClientApiController
             throw new BadRequestHttpException('The environment variable you are trying to edit is read-only.');
         }
 
-        $original = $variable->server_value;
+        $original = $variable->serverVariable->first()?->variable_value ?? $variable->default_value;
 
         // Revalidate the variable value using the egg variable specific validation rules for it.
         $request->validate(['value' => $variable->rules]);
