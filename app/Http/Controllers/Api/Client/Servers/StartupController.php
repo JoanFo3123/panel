@@ -82,8 +82,9 @@ class StartupController extends ClientApiController
             'variable_value' => $request->input('value') ?? '',
         ]);
 
-        $variable = $variable->refresh();
-        $variable->server_value = $request->input('value');
+        $variable = $variable->refresh()->load(['serverVariable' => function ($query) use ($server) {
+            $query->where('server_id', $server->id);
+        }]);
 
         $startup = $this->startupCommandService->handle($server);
 

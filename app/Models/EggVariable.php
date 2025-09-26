@@ -27,9 +27,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  * @property Egg $egg
  * @property ServerVariable $serverVariable
  *
- * The "server_value" variable is only present on the object if you've loaded this model
- * using the server relationship.
- * @property string|null $server_value
+ * Dynamic property that returns the server-specific variable value when the
+ * serverVariable relationship is loaded, otherwise returns the default_value.
+ * @property-read string $server_value
  */
 class EggVariable extends Model implements Validatable
 {
@@ -102,6 +102,24 @@ class EggVariable extends Model implements Validatable
         return in_array('required', $this->rules);
     }
 
+    /**
+     * Backwards-compatible accessor for server_value.
+     * This mimics the old behavior where server_value was available
+     * when the model was loaded through the server relationship.
+     */
+    public function getServerValueAttribute(): ?string
+    {
+        // If serverVariable relationship is loaded and contains data for this server,
+        // return the first one (there should only be one per server anyway)
+        if ($this->relationLoaded('serverVariable')) {
+            $serverVariable = $this->serverVariable->first();
+            return $serverVariable?->variable_value ?? $this->default_value;
+        }
+        
+        // Fallback to default_value if no server-specific value
+        return $this->default_value;
+    }
+
     public function egg(): HasOne
     {
         return $this->hasOne(Egg::class);
@@ -113,5 +131,20 @@ class EggVariable extends Model implements Validatable
     public function serverVariable(): HasMany
     {
         return $this->hasMany(ServerVariable::class, 'variable_id');
+    }
+
+    /**
+     * Get the server-specific variable value for a given server.
+     * Returns the value from ServerVariable if it exists, otherwise returns the default_value.
+     */
+    public function getServerValue(?int $serverId = null): string
+    {
+        if ($serverId === null) {
+            return $this->default_value;
+        }
+
+        $serverVariable = $this->serverVariable()->where('server_id', $serverId)->first();
+        
+        return $serverVariable?->variable_value ?? $this->default_value;
     }
 }
